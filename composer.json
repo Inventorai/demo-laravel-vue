@@ -90,12 +90,12 @@
     "prefer-stable": true,
     "repositories": [
         {
-            "type": "path",
-            "url": "../inventoraiSDKs/inventorai-php"
+            "type": "vcs",
+            "url": "https://github.com/Inventorai/sdk-php.git"
         },
         {
-            "type": "path",
-            "url": "../inventoraiSDKs/inventorai-laravel"
+            "type": "vcs",
+            "url": "https://github.com/Inventorai/sdk-laravel.git"
         }
     ]
 }
