@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Services\ApiActivityTracker;
 use Inventorai\Laravel\Facades\Inventorai;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Demonstrates the Inventorai SDK's Properties resource.
@@ -32,7 +34,7 @@ class PropertyController extends Controller
      *
      * Pagination is handled server-side with per_page (max 100) and page params.
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $params = [
             'per_page' => 25,
@@ -51,12 +53,13 @@ class PropertyController extends Controller
             Inventorai::properties()->list($params)
         );
 
-        $properties = collect($response['data'] ?? [])->map(fn ($p) => $this->formatDates($p))->all();
+        $properties = collect((array) ($response['data'] ?? []))->map(fn ($p) => $this->formatDates($p))->all();
 
         return Inertia::render('Properties/Index', [
             'properties' => $properties,
             'meta' => $response['meta'] ?? null,
             'filters' => $request->only(['search', 'property_type', 'page']),
+            'teamId' => $this->teamId(),
         ]);
     }
 
@@ -66,7 +69,7 @@ class PropertyController extends Controller
      * Uses the `include` parameter to eager-load related resources
      * in a single API call, avoiding N+1 requests.
      */
-    public function show(string $id)
+    public function show(string $id): Response
     {
         $response = ApiActivityTracker::track('GET', "/properties/{$id}", fn () =>
             Inventorai::properties()->get($id, ['include' => ['landlord', 'inspections']])
@@ -80,7 +83,7 @@ class PropertyController extends Controller
         }
 
         if (!empty($property['inspections'])) {
-            $property['inspections'] = collect($property['inspections'])
+            $property['inspections'] = collect((array) $property['inspections'])
                 ->map(fn ($i) => $this->formatDates($i))
                 ->all();
         }
@@ -91,7 +94,29 @@ class PropertyController extends Controller
     }
 
     /**
+     * The current team id, used for the realtime `team.{id}` broadcast channel.
+     *
+     * Sourced from the SDK's team resource and cached for 5 minutes.
+     * Returns null if it can't be determined.
+     */
+    private function teamId(): ?string
+    {
+        $teamId = Cache::remember('inventorai:team_id', 300, function () {
+            try {
+                return Inventorai::team()->current()['data']['id'] ?? null;
+            } catch (\Throwable) {
+                return null;
+            }
+        });
+
+        return $teamId !== null ? (string) $teamId : null;
+    }
+
+    /**
      * Format ISO date strings to UK format (e.g. Mon 21 Apr 2026).
+     *
+     * @param  array<array-key, mixed>  $data
+     * @return array<array-key, mixed>
      */
     private function formatDates(array $data): array
     {
