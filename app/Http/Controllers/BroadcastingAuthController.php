@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Http;
  */
 class BroadcastingAuthController extends Controller
 {
-    public function auth(Request $request)
+    public function auth(Request $request): Response
     {
         $response = Http::withToken(config('inventorai.token'))
             ->acceptJson()

@@ -67,17 +67,25 @@ class ApiActivityTracker
 
     /**
      * Get recent API activity entries.
+     *
+     * @return list<array<string, mixed>>
      */
     public static function recent(int $limit = 50): array
     {
-        return array_slice(Cache::get(self::CACHE_KEY, []), 0, $limit);
+        /** @var list<array<string, mixed>> $activity */
+        $activity = Cache::get(self::CACHE_KEY, []);
+
+        return array_slice($activity, 0, $limit);
     }
 
     /**
      * Get aggregated stats from recent activity.
+     *
+     * @return array<string, mixed>
      */
     public static function stats(): array
     {
+        /** @var list<array<string, mixed>> $activity */
         $activity = Cache::get(self::CACHE_KEY, []);
 
         if (empty($activity)) {
@@ -106,7 +114,7 @@ class ApiActivityTracker
         return [
             'total_requests' => $total,
             'avg_duration_ms' => $avgDuration,
-            'success_rate' => $total > 0 ? round(($successCount / $total) * 100) : 100,
+            'success_rate' => round(($successCount / $total) * 100),
             'by_endpoint' => $byEndpoint,
         ];
     }

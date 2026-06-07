@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Cache;
 use Inventorai\Laravel\Facades\Inventorai;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Dashboard with overview stats from the Inventorai API.
@@ -16,14 +17,14 @@ class DashboardController extends Controller
 {
     private const CACHE_TTL = 300;
 
-    public function index()
+    public function index(): Response
     {
         $dashboardData = Cache::remember('dashboard_stats', self::CACHE_TTL, function () {
             $properties = Inventorai::properties()->list(['per_page' => 100]);
             $inspections = Inventorai::inspections()->list(['per_page' => 100, 'scope' => 'all']);
 
-            $propData = collect($properties['data'] ?? []);
-            $inspData = collect($inspections['data'] ?? []);
+            $propData = collect((array) ($properties['data'] ?? []));
+            $inspData = collect((array) ($inspections['data'] ?? []));
 
             return [
                 'stats' => [

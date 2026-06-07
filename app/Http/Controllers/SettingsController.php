@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\ApiActivityTracker;
 use Inventorai\Laravel\Facades\Inventorai;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Shows API connection status.
@@ -18,7 +19,7 @@ use Inertia\Inertia;
  */
 class SettingsController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         $response = ApiActivityTracker::track('GET', '/properties', fn () =>
             Inventorai::properties()->list(['per_page' => 1])

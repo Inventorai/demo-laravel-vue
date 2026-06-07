@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Services\ApiActivityTracker;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inventorai\Laravel\Facades\Inventorai;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Demonstrates the Inventorai SDK's Inspections resource.
@@ -39,7 +42,7 @@ class InspectionController extends Controller
     /**
      * List inspections with optional type and status filtering.
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $params = [
             'per_page' => 25,
@@ -60,7 +63,7 @@ class InspectionController extends Controller
             Inventorai::inspections()->list($params)
         );
 
-        $inspections = collect($response['data'] ?? [])
+        $inspections = collect((array) ($response['data'] ?? []))
             ->map(fn ($i) => $this->formatDates($i))
             ->all();
 
@@ -77,7 +80,7 @@ class InspectionController extends Controller
      * Loads the full hierarchy (areas > items) so the user can
      * update condition, cleanliness, and notes inline.
      */
-    public function show(string $id)
+    public function show(string $id): Response
     {
         $response = ApiActivityTracker::track('GET', "/inspections/{$id}", fn () =>
             Inventorai::inspections()->get($id, [
@@ -99,7 +102,7 @@ class InspectionController extends Controller
      * Uses Inventorai::inspectionAreas()->update() which sends a
      * PATCH request to /inspections/{id}/areas/{areaId}.
      */
-    public function updateArea(string $inspectionId, string $areaId, Request $request)
+    public function updateArea(string $inspectionId, string $areaId, Request $request): RedirectResponse
     {
         $data = $request->validate([
             'condition' => ['nullable', 'in:poor,fair,good,excellent'],
@@ -120,7 +123,7 @@ class InspectionController extends Controller
      * Uses Inventorai::inspectionItems()->update() which sends a
      * PATCH request to /inspections/{id}/items/{itemId}.
      */
-    public function updateItem(string $inspectionId, string $itemId, Request $request)
+    public function updateItem(string $inspectionId, string $itemId, Request $request): RedirectResponse
     {
         $data = $request->validate([
             'condition' => ['nullable', 'in:poor,fair,good,excellent'],
@@ -142,7 +145,7 @@ class InspectionController extends Controller
      * Uses Inventorai::inspectionAreas()->uploadPhoto() which sends a
      * multipart POST to /inspections/{id}/areas/{areaId}/photos.
      */
-    public function uploadAreaPhoto(string $inspectionId, string $areaId, Request $request)
+    public function uploadAreaPhoto(string $inspectionId, string $areaId, Request $request): RedirectResponse
     {
         $request->validate(['file' => ['required', 'image', 'max:10240']]);
 
@@ -159,7 +162,7 @@ class InspectionController extends Controller
      * Uses Inventorai::inspectionItems()->uploadPhoto() which sends a
      * multipart POST to /inspections/{id}/items/{itemId}/photos.
      */
-    public function uploadItemPhoto(string $inspectionId, string $itemId, Request $request)
+    public function uploadItemPhoto(string $inspectionId, string $itemId, Request $request): RedirectResponse
     {
         $request->validate(['file' => ['required', 'image', 'max:10240']]);
 
@@ -178,7 +181,7 @@ class InspectionController extends Controller
      *
      * The token needs the 'phrases:read' ability for this to work.
      */
-    public function searchPhrases(Request $request)
+    public function searchPhrases(Request $request): JsonResponse
     {
         $request->validate([
             'q' => ['required', 'string', 'min:2', 'max:200'],
@@ -206,6 +209,9 @@ class InspectionController extends Controller
 
     /**
      * Format ISO date strings to UK format (e.g. Mon 21 Apr 2026).
+     *
+     * @param  array<array-key, mixed>  $data
+     * @return array<array-key, mixed>
      */
     private function formatDates(array $data): array
     {
