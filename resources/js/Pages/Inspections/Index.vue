@@ -15,7 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { X, ClipboardCheck, ChevronLeft, ChevronRight, Eye } from 'lucide-vue-next';
+import { X, ClipboardCheck, ChevronLeft, ChevronRight, Eye } from '@lucide/vue';
 
 const humanize = (value: string) => value.replace(/_/g, ' ');
 

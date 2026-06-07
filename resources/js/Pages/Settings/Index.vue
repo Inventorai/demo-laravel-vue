@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Head } from '@inertiajs/vue3';
-import { CheckCircle } from 'lucide-vue-next';
+import { CheckCircle } from '@lucide/vue';
 
 defineProps<{
     connected: boolean;

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ArrowLeft, Save, MapPin, Upload, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { ArrowLeft, Save, MapPin, Upload, ChevronLeft, ChevronRight } from '@lucide/vue';
 import { useDebounceFn } from '@vueuse/core';
 import axios from 'axios';
 import { useEcho } from '@/composables/useEcho';
@@ -164,7 +164,7 @@ const channelName = `inspection.${props.inspection.id}`;
 onMounted(() => {
     echo?.private(channelName)
         .listen('.inspection-photo-uploaded', () => {
-            router.reload({ preserveScroll: true });
+            router.reload();
         });
 });
 onUnmounted(() => {

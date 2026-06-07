@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Menu, ChevronDown, User, LogOut, Settings } from 'lucide-vue-next';
+import { Menu, ChevronDown, User, LogOut, Settings } from '@lucide/vue';
 import { useEcho } from '@/composables/useEcho';
 
 const echo = useEcho();

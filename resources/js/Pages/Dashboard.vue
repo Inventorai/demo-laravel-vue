@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Head } from '@inertiajs/vue3';
-import { Home, ClipboardCheck, CheckCircle, Clock } from 'lucide-vue-next';
+import { Home, ClipboardCheck, CheckCircle, Clock } from '@lucide/vue';
 import { VisDonut, VisSingleContainer, VisGroupedBar, VisAxis, VisXYContainer } from '@unovis/vue';
 
 const props = defineProps<{
@@ -159,7 +159,7 @@ const statusColors: Record<string, string> = {
                             <CardDescription>Breakdown of inspection types across your account</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div class="h-[250px]">
+                            <div class="h-[300px]">
                                 <VisXYContainer :data="charts.inspectionTypes">
                                     <VisGroupedBar
                                         :x="(_: any, i: number) => i"
