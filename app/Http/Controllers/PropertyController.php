@@ -90,6 +90,7 @@ class PropertyController extends Controller
 
         return Inertia::render('Properties/Show', [
             'property' => $property,
+            'teamId' => $this->teamId(),
         ]);
     }
 

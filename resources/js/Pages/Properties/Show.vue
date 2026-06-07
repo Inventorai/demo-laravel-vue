@@ -3,14 +3,46 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
+import { onMounted, onUnmounted } from 'vue';
+import { useEcho } from '@/composables/useEcho';
 
-defineProps<{
+const props = defineProps<{
     property: Record<string, any>;
+    teamId?: string | null;
 }>();
 
 const humanize = (value: string) => value.replace(/_/g, ' ');
+
+// Realtime: react when THIS property changes. Property events broadcast on the
+// team.{teamId} channel and carry the property id, so we filter to ours.
+const echo = useEcho();
+
+onMounted(() => {
+    if (!echo || !props.teamId) return;
+
+    const refreshIfMine = (e: { id?: string }) => {
+        if (e?.id === props.property.id) {
+            router.reload({ only: ['property'] });
+        }
+    };
+
+    echo.private(`team.${props.teamId}`)
+        .listen('.property.updated', refreshIfMine)
+        .listen('.property.image-updated', refreshIfMine)
+        .listen('.property.deleted', (e: { id?: string }) => {
+            if (e?.id === props.property.id) {
+                router.visit(route('properties.index'));
+            }
+        });
+});
+
+onUnmounted(() => {
+    if (props.teamId) {
+        echo?.leave(`team.${props.teamId}`);
+    }
+});
 </script>
 
 <template>
