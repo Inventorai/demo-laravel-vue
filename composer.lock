@@ -1133,16 +1133,16 @@
         },
         {
             "name": "inventorai/laravel",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "git@github.com:Inventorai/sdk-laravel.git",
-                "reference": "3816a75bd91711f30f7643853da4f5488aec90ba"
+                "reference": "611a2467cb5593c000dfeb698d1b1c81aa29922b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Inventorai/sdk-laravel/zipball/3816a75bd91711f30f7643853da4f5488aec90ba",
-                "reference": "3816a75bd91711f30f7643853da4f5488aec90ba",
+                "url": "https://api.github.com/repos/Inventorai/sdk-laravel/zipball/611a2467cb5593c000dfeb698d1b1c81aa29922b",
+                "reference": "611a2467cb5593c000dfeb698d1b1c81aa29922b",
                 "shasum": ""
             },
             "require": {
@@ -1182,23 +1182,23 @@
             ],
             "description": "Laravel integration for the Inventorai SDK",
             "support": {
-                "source": "https://github.com/Inventorai/sdk-laravel/tree/1.0.0",
+                "source": "https://github.com/Inventorai/sdk-laravel/tree/1.0.1",
                 "issues": "https://github.com/Inventorai/sdk-laravel/issues"
             },
-            "time": "2026-06-07T13:17:31+00:00"
+            "time": "2026-06-07T17:28:48+00:00"
         },
         {
             "name": "inventorai/sdk",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "git@github.com:Inventorai/sdk-php.git",
-                "reference": "5321a29afa5bf57ea425b5c8bc14328ce7339de3"
+                "reference": "6c45188223052c7f456fe1151b489b2354a870c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Inventorai/sdk-php/zipball/5321a29afa5bf57ea425b5c8bc14328ce7339de3",
-                "reference": "5321a29afa5bf57ea425b5c8bc14328ce7339de3",
+                "url": "https://api.github.com/repos/Inventorai/sdk-php/zipball/6c45188223052c7f456fe1151b489b2354a870c5",
+                "reference": "6c45188223052c7f456fe1151b489b2354a870c5",
                 "shasum": ""
             },
             "require": {
@@ -1239,10 +1239,10 @@
                 "sdk"
             ],
             "support": {
-                "source": "https://github.com/Inventorai/sdk-php/tree/1.0.0",
+                "source": "https://github.com/Inventorai/sdk-php/tree/1.0.1",
                 "issues": "https://github.com/Inventorai/sdk-php/issues"
             },
-            "time": "2026-06-07T13:17:30+00:00"
+            "time": "2026-06-07T17:27:39+00:00"
         },
         {
             "name": "laravel/framework",

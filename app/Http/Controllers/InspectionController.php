@@ -7,9 +7,12 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inventorai\Laravel\Facades\Inventorai;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inventorai\Laravel\Facades\Inventorai;
+use Inventorai\SDK\Resources\InspectionAreas;
+use Inventorai\SDK\Resources\InspectionItems;
+use Inventorai\SDK\Resources\Inspections;
 
 /**
  * Demonstrates the Inventorai SDK's Inspections resource.
@@ -33,9 +36,9 @@ use Inertia\Response;
  *
  * SDK errors are handled by the global exception handler in bootstrap/app.php.
  *
- * @see \Inventorai\SDK\Resources\Inspections
- * @see \Inventorai\SDK\Resources\InspectionAreas
- * @see \Inventorai\SDK\Resources\InspectionItems
+ * @see Inspections
+ * @see InspectionAreas
+ * @see InspectionItems
  */
 class InspectionController extends Controller
 {
@@ -59,8 +62,7 @@ class InspectionController extends Controller
             $params['filter']['type'] = $request->input('type');
         }
 
-        $response = ApiActivityTracker::track('GET', '/inspections', fn () =>
-            Inventorai::inspections()->list($params)
+        $response = ApiActivityTracker::track('GET', '/inspections', fn () => Inventorai::inspections()->list($params)
         );
 
         $inspections = collect((array) ($response['data'] ?? []))
@@ -75,17 +77,28 @@ class InspectionController extends Controller
     }
 
     /**
-     * Show a single inspection with editable areas and items.
+     * Show a single inspection with all related data in one call.
      *
-     * Loads the full hierarchy (areas > items) so the user can
-     * update condition, cleanliness, and notes inline.
+     * Demonstrates the canonical read pattern: assemble everything you need
+     * through `include` rather than firing follow-up requests to
+     * inspectionAreas()->list(), inspectionItems()->list(), etc.
+     *
+     * The granular sub-resource SDKs are reserved for *writes* (see
+     * updateArea / updateItem / uploadAreaPhoto below) and mobile sync
+     * (paginating one slice, re-pulling after a change).
      */
     public function show(string $id): Response
     {
-        $response = ApiActivityTracker::track('GET', "/inspections/{$id}", fn () =>
-            Inventorai::inspections()->get($id, [
-                'include' => ['property', 'inspector', 'areas', 'areas.items'],
-            ])
+        $response = ApiActivityTracker::track('GET', "/inspections/{$id}", fn () => Inventorai::inspections()->get($id, [
+            'include' => [
+                'property', 'property.currentTenancy.tenants',
+                'inspector',
+                'areas.items.elements',
+                'meterReadings', 'keysFobs',
+                'assetChecks.propertyAsset.propertyArea',
+                'complianceForms.sections.fields.responses',
+            ],
+        ])
         );
 
         $inspection = $response['data'] ?? $response;
@@ -110,8 +123,7 @@ class InspectionController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/areas/{$areaId}", fn () =>
-            Inventorai::inspectionAreas()->update($inspectionId, $areaId, $data)
+        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/areas/{$areaId}", fn () => Inventorai::inspectionAreas()->update($inspectionId, $areaId, $data)
         );
 
         return back()->with('success', 'Area updated.');
@@ -132,8 +144,7 @@ class InspectionController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/items/{$itemId}", fn () =>
-            Inventorai::inspectionItems()->update($inspectionId, $itemId, $data)
+        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/items/{$itemId}", fn () => Inventorai::inspectionItems()->update($inspectionId, $itemId, $data)
         );
 
         return back()->with('success', 'Item updated.');
@@ -149,8 +160,7 @@ class InspectionController extends Controller
     {
         $request->validate(['file' => ['required', 'image', 'max:10240']]);
 
-        ApiActivityTracker::track('POST', "/inspections/{$inspectionId}/areas/{$areaId}/photos", fn () =>
-            Inventorai::inspectionAreas()->uploadPhoto($inspectionId, $areaId, $request->file('file')->getRealPath(), $request->file('file')->getClientOriginalName())
+        ApiActivityTracker::track('POST', "/inspections/{$inspectionId}/areas/{$areaId}/photos", fn () => Inventorai::inspectionAreas()->uploadPhoto($inspectionId, $areaId, $request->file('file')->getRealPath(), $request->file('file')->getClientOriginalName())
         );
 
         return back()->with('success', 'Photo uploaded.');
@@ -166,8 +176,7 @@ class InspectionController extends Controller
     {
         $request->validate(['file' => ['required', 'image', 'max:10240']]);
 
-        ApiActivityTracker::track('POST', "/inspections/{$inspectionId}/items/{$itemId}/photos", fn () =>
-            Inventorai::inspectionItems()->uploadPhoto($inspectionId, $itemId, $request->file('file')->getRealPath(), $request->file('file')->getClientOriginalName())
+        ApiActivityTracker::track('POST', "/inspections/{$inspectionId}/items/{$itemId}/photos", fn () => Inventorai::inspectionItems()->uploadPhoto($inspectionId, $itemId, $request->file('file')->getRealPath(), $request->file('file')->getClientOriginalName())
         );
 
         return back()->with('success', 'Photo uploaded.');
@@ -200,8 +209,7 @@ class InspectionController extends Controller
             'limit' => 20,
         ]);
 
-        $response = ApiActivityTracker::track('GET', '/phrases/search', fn () =>
-            Inventorai::phrases()->search($params)
+        $response = ApiActivityTracker::track('GET', '/phrases/search', fn () => Inventorai::phrases()->search($params)
         );
 
         return response()->json($response['data']['phrases'] ?? []);
@@ -218,10 +226,11 @@ class InspectionController extends Controller
         $dateFields = ['created_at', 'updated_at', 'inspection_date', 'scheduled_at', 'completed_at', 'started_at'];
 
         foreach ($dateFields as $field) {
-            if (!empty($data[$field])) {
+            if (! empty($data[$field])) {
                 try {
                     $data[$field] = Carbon::parse($data[$field])->format('D j M Y');
-                } catch (\Exception) {}
+                } catch (\Exception) {
+                }
             }
         }
 
