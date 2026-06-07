@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { X, ClipboardCheck, ChevronLeft, ChevronRight, Eye } from '@lucide/vue';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const humanize = (value: string) => value.replace(/_/g, ' ');
 
@@ -28,6 +29,7 @@ const props = defineProps<{
 
 const status = ref(props.filters?.status ?? '');
 const type = ref(props.filters?.type ?? '');
+const loading = ref(false);
 
 const applyFilters = () => {
     const params: Record<string, any> = {};
@@ -37,6 +39,8 @@ const applyFilters = () => {
     router.get(route('inspections.index'), params, {
         preserveState: true,
         preserveScroll: true,
+        onStart: () => (loading.value = true),
+        onFinish: () => (loading.value = false),
     });
 };
 
@@ -46,7 +50,11 @@ watch(type, applyFilters);
 const clearFilters = () => {
     status.value = '';
     type.value = '';
-    router.get(route('inspections.index'), {}, { preserveState: true });
+    router.get(route('inspections.index'), {}, {
+        preserveState: true,
+        onStart: () => (loading.value = true),
+        onFinish: () => (loading.value = false),
+    });
 };
 
 const goToPage = (page: number) => {
@@ -57,6 +65,8 @@ const goToPage = (page: number) => {
     router.get(route('inspections.index'), params, {
         preserveState: true,
         preserveScroll: true,
+        onStart: () => (loading.value = true),
+        onFinish: () => (loading.value = false),
     });
 };
 </script>
@@ -125,12 +135,43 @@ const goToPage = (page: number) => {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div v-if="inspections.length === 0" class="text-center py-12">
+                        <div v-if="!loading && inspections.length === 0" class="text-center py-12">
                             <ClipboardCheck class="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 class="mt-4 text-lg font-medium text-foreground">No inspections found</h3>
                             <p class="mt-2 text-sm text-muted-foreground">
                                 {{ type || status ? 'Try adjusting your filters.' : 'Inspections from your Inventorai account will appear here.' }}
                             </p>
+                        </div>
+
+                        <div v-else-if="loading">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead class="w-[50px]"></TableHead>
+                                        <TableHead>Property</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Inspector</TableHead>
+                                        <TableHead>Depth</TableHead>
+                                        <TableHead>Defects</TableHead>
+                                        <TableHead class="w-[50px]"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="n in 8" :key="`sk-${n}`">
+                                        <TableCell><Skeleton class="h-8 w-8 rounded" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-40" /></TableCell>
+                                        <TableCell><Skeleton class="h-5 w-20 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton class="h-5 w-20 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-24" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-24" /></TableCell>
+                                        <TableCell><Skeleton class="h-5 w-16 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-12" /></TableCell>
+                                        <TableCell><Skeleton class="h-8 w-8 rounded" /></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
                         </div>
 
                         <template v-else>

@@ -17,6 +17,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Eye, Search, X, Home, ChevronLeft, ChevronRight } from '@lucide/vue';
 import { useDebounceFn } from '@vueuse/core';
 import { useEcho } from '@/composables/useEcho';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const props = defineProps<{
     properties: Record<string, any>[];
@@ -28,6 +29,7 @@ const props = defineProps<{
 
 const search = ref(props.filters?.search ?? '');
 const propertyType = ref(props.filters?.property_type ?? '');
+const loading = ref(false);
 
 const applyFilters = useDebounceFn(() => {
     const params: Record<string, any> = {};
@@ -37,6 +39,8 @@ const applyFilters = useDebounceFn(() => {
     router.get(route('properties.index'), params, {
         preserveState: true,
         preserveScroll: true,
+        onStart: () => (loading.value = true),
+        onFinish: () => (loading.value = false),
     });
 }, 300);
 
@@ -46,7 +50,11 @@ watch(propertyType, applyFilters);
 const clearFilters = () => {
     search.value = '';
     propertyType.value = '';
-    router.get(route('properties.index'), {}, { preserveState: true });
+    router.get(route('properties.index'), {}, {
+        preserveState: true,
+        onStart: () => (loading.value = true),
+        onFinish: () => (loading.value = false),
+    });
 };
 
 const goToPage = (page: number) => {
@@ -57,6 +65,8 @@ const goToPage = (page: number) => {
     router.get(route('properties.index'), params, {
         preserveState: true,
         preserveScroll: true,
+        onStart: () => (loading.value = true),
+        onFinish: () => (loading.value = false),
     });
 };
 
@@ -144,12 +154,39 @@ onUnmounted(() => {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div v-if="properties.length === 0" class="text-center py-12">
+                        <div v-if="!loading && properties.length === 0" class="text-center py-12">
                             <Home class="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 class="mt-4 text-lg font-medium text-foreground">No properties found</h3>
                             <p class="mt-2 text-sm text-muted-foreground">
                                 {{ search || propertyType ? 'Try adjusting your filters.' : 'Properties from your Inventorai account will appear here.' }}
                             </p>
+                        </div>
+
+                        <div v-else-if="loading">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead class="w-[50px]"></TableHead>
+                                        <TableHead>Address</TableHead>
+                                        <TableHead>City</TableHead>
+                                        <TableHead>Postcode</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead class="w-[50px]"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="n in 8" :key="`sk-${n}`">
+                                        <TableCell><Skeleton class="h-8 w-8 rounded" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-40" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-24" /></TableCell>
+                                        <TableCell><Skeleton class="h-4 w-20" /></TableCell>
+                                        <TableCell><Skeleton class="h-5 w-16 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton class="h-5 w-24 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton class="h-8 w-8 rounded" /></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
                         </div>
 
                         <template v-else>
