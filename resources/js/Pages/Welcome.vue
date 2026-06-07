@@ -18,7 +18,9 @@ defineProps<{
     <div class="flex min-h-screen flex-col items-center justify-center bg-background px-4">
         <div class="w-full max-w-2xl space-y-8">
             <div class="flex flex-col items-center gap-4">
-                <ApplicationLogo class="h-16" />
+                <div>
+                    <img src="/images/logo/iai_logo.svg" alt="Inventorai" class="h-16 rounded-full" />
+                </div>
                 <h1 class="text-3xl font-bold tracking-tight text-foreground">
                     Inventorai SDK Demo App
                 </h1>

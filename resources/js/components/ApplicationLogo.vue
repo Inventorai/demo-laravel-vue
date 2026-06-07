@@ -2,5 +2,5 @@
 </script>
 
 <template>
-    <img src="/images/logo/iai_full_logo.png" alt="Inventorai" v-bind="$attrs" />
+    <img src="/images/logo/app_logo.svg" alt="Inventorai" v-bind="$attrs" />
 </template>
