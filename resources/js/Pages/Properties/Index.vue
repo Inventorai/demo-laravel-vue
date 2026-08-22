@@ -224,8 +224,8 @@ onUnmounted(() => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge :variant="property.residential ? 'default' : 'outline'">
-                                                {{ property.residential ? 'Residential' : 'Commercial' }}
+                                            <Badge :variant="property.is_residential ? 'default' : 'outline'">
+                                                {{ property.is_residential ? 'Residential' : 'Commercial' }}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>

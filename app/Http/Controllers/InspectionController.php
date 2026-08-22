@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inventorai\Laravel\Facades\Inventorai;
@@ -43,6 +44,33 @@ use Inventorai\SDK\Resources\Inspections;
 class InspectionController extends Controller
 {
     /**
+     * The team the API token belongs to, used to subscribe to its private
+     * broadcast channel. Cached for 5 minutes, mirroring PropertyController.
+     */
+    private function teamId(): ?string
+    {
+        $teamId = Cache::remember('inventorai:team_id', 300, function () {
+            try {
+                return Inventorai::team()->current()['data']['id'] ?? null;
+            } catch (\Throwable) {
+                return null;
+            }
+        });
+
+        return $teamId !== null ? (string) $teamId : null;
+    }
+
+    /**
+     * Tenancy and non-tenancy inspection types, matching the filter dropdown.
+     *
+     * @var list<string>
+     */
+    private const LISTED_TYPES = [
+        'move_in', 'periodic', 'move_out',
+        'vacant', 'pre_tenancy', 'landlord_only', 'between_tenancies',
+    ];
+
+    /**
      * List inspections with optional type and status filtering.
      */
     public function index(Request $request): Response
@@ -58,9 +86,12 @@ class InspectionController extends Controller
             $params['filter']['status'] = $request->input('status');
         }
 
-        if ($request->filled('type')) {
-            $params['filter']['type'] = $request->input('type');
-        }
+        // Only tenancy and non-tenancy inspections belong in this list.
+        // Maintenance inspections come out of the defect workflow rather than
+        // an inspection booking, so they are excluded unless asked for by name.
+        $params['filter']['type'] = $request->filled('type')
+            ? $request->input('type')
+            : implode(',', self::LISTED_TYPES);
 
         $response = ApiActivityTracker::track('GET', '/inspections', fn () => Inventorai::inspections()->list($params)
         );
@@ -73,6 +104,7 @@ class InspectionController extends Controller
             'inspections' => $inspections,
             'meta' => $response['meta'] ?? null,
             'filters' => $request->only(['status', 'type', 'page']),
+            'teamId' => $this->teamId(),
         ]);
     }
 
@@ -223,7 +255,7 @@ class InspectionController extends Controller
      */
     private function formatDates(array $data): array
     {
-        $dateFields = ['created_at', 'updated_at', 'inspection_date', 'scheduled_at', 'completed_at', 'started_at'];
+        $dateFields = ['created_at', 'updated_at', 'scheduled_at', 'completed_at', 'started_at'];
 
         foreach ($dateFields as $field) {
             if (! empty($data[$field])) {

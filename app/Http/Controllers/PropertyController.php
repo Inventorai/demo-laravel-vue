@@ -121,7 +121,7 @@ class PropertyController extends Controller
      */
     private function formatDates(array $data): array
     {
-        $dateFields = ['created_at', 'updated_at', 'inspection_date', 'scheduled_at', 'completed_at', 'finalized_at'];
+        $dateFields = ['created_at', 'updated_at', 'scheduled_at', 'completed_at', 'finalized_at'];
 
         foreach ($dateFields as $field) {
             if (!empty($data[$field])) {

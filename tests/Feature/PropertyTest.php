@@ -60,7 +60,7 @@ test('properties page displays API data', function () {
                     'full_address' => '10 Downing Street, London, SW1A 2AA',
                 ],
                 'property_type' => 'house',
-                'residential' => true,
+                'is_residential' => true,
                 'image' => null,
             ],
         ],

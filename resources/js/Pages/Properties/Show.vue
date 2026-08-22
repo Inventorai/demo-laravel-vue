@@ -85,8 +85,8 @@ onUnmounted(() => {
                                 </div>
                                 <div class="flex flex-wrap gap-2">
                                     <Badge variant="secondary" class="capitalize">{{ property.property_type }}</Badge>
-                                    <Badge :variant="property.residential ? 'default' : 'outline'">
-                                        {{ property.residential ? 'Residential' : 'Commercial' }}
+                                    <Badge :variant="property.is_residential ? 'default' : 'outline'">
+                                        {{ property.is_residential ? 'Residential' : 'Commercial' }}
                                     </Badge>
                                 </div>
                                 <div v-if="property.created_at" class="text-xs text-muted-foreground">
@@ -129,7 +129,7 @@ onUnmounted(() => {
                                 <div>
                                     <p class="text-sm font-medium capitalize">{{ humanize(inspection.type ?? `Inspection #${inspection.id}`) }}</p>
                                     <p class="text-xs text-muted-foreground">
-                                        {{ inspection.inspection_date ?? inspection.created_at ?? '—' }}
+                                        {{ inspection.scheduled_at ?? inspection.created_at ?? '—' }}
                                     </p>
                                 </div>
                                 <Badge variant="secondary" class="capitalize">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,6 +17,7 @@ import {
 import { Head, Link, router } from '@inertiajs/vue3';
 import { X, ClipboardCheck, ChevronLeft, ChevronRight, Eye } from '@lucide/vue';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEcho } from '@/composables/useEcho';
 
 const humanize = (value: string) => value.replace(/_/g, ' ');
 
@@ -25,7 +26,32 @@ const props = defineProps<{
     meta?: Record<string, any>;
     filters?: Record<string, any>;
     error?: string;
+    teamId?: string | null;
 }>();
+
+// Live updates: the API broadcasts inspection changes on the team's private
+// channel, so the list refreshes itself instead of waiting for a reload.
+// Auth is proxied through /broadcasting/auth to keep the API token server-side.
+const echo = useEcho();
+
+onMounted(() => {
+    if (!echo || !props.teamId) return;
+
+    const refresh = () => router.reload({ only: ['inspections', 'meta'] });
+
+    echo.private(`team.${props.teamId}`)
+        .listen('.inspection.created', refresh)
+        .listen('.inspection.updated', refresh)
+        .listen('.inspection.deleted', refresh)
+        .listen('.inspection.auto-completed', refresh)
+        .listen('.inspections.archived', refresh);
+});
+
+onUnmounted(() => {
+    if (props.teamId) {
+        echo?.leave(`team.${props.teamId}`);
+    }
+});
 
 const status = ref(props.filters?.status ?? '');
 const type = ref(props.filters?.type ?? '');
@@ -220,7 +246,7 @@ const goToPage = (page: number) => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell class="whitespace-nowrap">
-                                            {{ inspection.inspection_date ?? '—' }}
+                                            {{ inspection.scheduled_at ?? '—' }}
                                         </TableCell>
                                         <TableCell>
                                             {{ inspection.inspector?.name ?? '—' }}

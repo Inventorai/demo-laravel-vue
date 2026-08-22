@@ -243,7 +243,7 @@ const uploadItemPhoto = (itemId: string, event: Event) => {
                             <img v-if="inspection.property?.image" :src="inspection.property.image" class="h-32 w-48 rounded-lg object-cover shrink-0 cursor-pointer" @click="openLightbox(inspection.property.image)" />
                             <div v-else class="h-32 w-48 rounded-lg bg-muted shrink-0 flex items-center justify-center text-muted-foreground text-xs">No image</div>
                             <div class="flex-1 grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-4">
-                                <div><p class="text-muted-foreground">Date</p><p class="font-medium">{{ inspection.inspection_date ?? '—' }}</p></div>
+                                <div><p class="text-muted-foreground">Date</p><p class="font-medium">{{ inspection.scheduled_at ?? '—' }}</p></div>
                                 <div><p class="text-muted-foreground">Inspector</p><p class="font-medium">{{ inspection.inspector?.name ?? '—' }}</p></div>
                                 <div><p class="text-muted-foreground">Type</p><p class="font-medium capitalize">{{ humanize(inspection.type ?? '—') }}</p></div>
                                 <div><p class="text-muted-foreground">Depth</p><p class="font-medium capitalize">{{ humanize(inspection.inspection_depth ?? '—') }}</p></div>
