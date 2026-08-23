@@ -32,6 +32,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/inspections/{inspectionId}/items/{itemId}', [InspectionController::class, 'updateItem'])->name('inspections.items.update');
     Route::post('/inspections/{inspectionId}/areas/{areaId}/photos', [InspectionController::class, 'uploadAreaPhoto'])->name('inspections.areas.uploadPhoto');
     Route::post('/inspections/{inspectionId}/items/{itemId}/photos', [InspectionController::class, 'uploadItemPhoto'])->name('inspections.items.uploadPhoto');
+    Route::post('/inspections/{inspectionId}/meters', [InspectionController::class, 'storeMeter'])->name('inspections.meters.store');
+    Route::patch('/inspections/{inspectionId}/meters/{meterId}', [InspectionController::class, 'updateMeter'])->name('inspections.meters.update');
+    Route::delete('/inspections/{inspectionId}/meters/{meterId}', [InspectionController::class, 'destroyMeter'])->name('inspections.meters.destroy');
+    Route::post('/inspections/{inspectionId}/keys', [InspectionController::class, 'storeKey'])->name('inspections.keys.store');
+    Route::patch('/inspections/{inspectionId}/keys/{keyId}', [InspectionController::class, 'updateKey'])->name('inspections.keys.update');
+    Route::delete('/inspections/{inspectionId}/keys/{keyId}', [InspectionController::class, 'destroyKey'])->name('inspections.keys.destroy');
+    Route::patch('/inspections/{inspectionId}/compliance/{fieldId}', [InspectionController::class, 'updateCompliance'])->name('inspections.compliance.update');
+    Route::patch('/inspections/{inspectionId}/asset-checks/{checkId}', [InspectionController::class, 'updateAssetCheck'])->name('inspections.assetChecks.update');
     Route::get('/api/phrases/search', [InspectionController::class, 'searchPhrases'])->name('api.phrases.search');
     Route::get('/api/activity', fn () => response()->json(\App\Services\ApiActivityTracker::recent(50)))->name('api.activity');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');

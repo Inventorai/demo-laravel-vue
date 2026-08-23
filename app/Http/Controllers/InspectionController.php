@@ -11,9 +11,13 @@ use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inventorai\Laravel\Facades\Inventorai;
+use Inventorai\SDK\Resources\AssetChecks;
+use Inventorai\SDK\Resources\Compliance;
 use Inventorai\SDK\Resources\InspectionAreas;
 use Inventorai\SDK\Resources\InspectionItems;
 use Inventorai\SDK\Resources\Inspections;
+use Inventorai\SDK\Resources\KeysFobs;
+use Inventorai\SDK\Resources\MeterReadings;
 
 /**
  * Demonstrates the Inventorai SDK's Inspections resource.
@@ -35,11 +39,22 @@ use Inventorai\SDK\Resources\Inspections;
  *
  * Editable item fields: name, condition, cleanliness, description, notes
  *
+ * The show page also covers the four record types that sit alongside the
+ * area/item tree, each with its own SDK resource:
+ * - Meter readings   — gas, electricity, water; prepaid meters carry a balance
+ * - Keys & fobs      — a typed count of what was handed over
+ * - Compliance       — a snapshot of the team's forms, one response per field
+ * - Asset checks     — alarms and safety equipment, tested per property asset
+ *
  * SDK errors are handled by the global exception handler in bootstrap/app.php.
  *
  * @see Inspections
  * @see InspectionAreas
  * @see InspectionItems
+ * @see MeterReadings
+ * @see KeysFobs
+ * @see Compliance
+ * @see AssetChecks
  */
 class InspectionController extends Controller
 {
@@ -68,6 +83,16 @@ class InspectionController extends Controller
     private const LISTED_TYPES = [
         'move_in', 'periodic', 'move_out',
         'vacant', 'pre_tenancy', 'landlord_only', 'between_tenancies',
+    ];
+
+    /**
+     * Key and fob types the API accepts on a keys-fobs record.
+     *
+     * @var list<string>
+     */
+    private const KEY_TYPES = [
+        'front_door_key', 'back_door_key', 'mailbox_key', 'window_key',
+        'entry_fob', 'garage_remote', 'gate_remote', 'other',
     ];
 
     /**
@@ -212,6 +237,172 @@ class InspectionController extends Controller
         );
 
         return back()->with('success', 'Photo uploaded.');
+    }
+
+    /**
+     * Create a meter reading on an inspection.
+     *
+     * Uses Inventorai::meterReadings()->create() which sends a
+     * POST request to /inspections/{id}/meter-readings.
+     */
+    public function storeMeter(string $inspectionId, Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'meter_type' => ['required', 'in:gas,electricity,water,other'],
+            'meter_location' => ['nullable', 'string', 'max:255'],
+            'meter_serial' => ['nullable', 'string', 'max:255'],
+            'reading' => ['nullable', 'numeric', 'min:0'],
+            'reading_unit' => ['nullable', 'string', 'max:50'],
+            'meter_balance' => ['nullable', 'numeric'],
+            'is_prepaid' => ['nullable', 'boolean'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        ApiActivityTracker::track('POST', "/inspections/{$inspectionId}/meter-readings", fn () => Inventorai::meterReadings()->create($inspectionId, $data)
+        );
+
+        return back()->with('success', 'Meter reading added.');
+    }
+
+    /**
+     * Update a meter reading.
+     *
+     * Uses Inventorai::meterReadings()->update() which sends a
+     * PATCH request to /inspections/{id}/meter-readings/{meterReadingId}.
+     */
+    public function updateMeter(string $inspectionId, string $meterId, Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'meter_type' => ['required', 'in:gas,electricity,water,other'],
+            'meter_location' => ['nullable', 'string', 'max:255'],
+            'meter_serial' => ['nullable', 'string', 'max:255'],
+            'reading' => ['nullable', 'numeric', 'min:0'],
+            'reading_unit' => ['nullable', 'string', 'max:50'],
+            'meter_balance' => ['nullable', 'numeric'],
+            'is_prepaid' => ['nullable', 'boolean'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/meter-readings/{$meterId}", fn () => Inventorai::meterReadings()->update($inspectionId, $meterId, $data)
+        );
+
+        return back()->with('success', 'Meter reading updated.');
+    }
+
+    /**
+     * Delete a meter reading.
+     *
+     * Uses Inventorai::meterReadings()->delete() which sends a
+     * DELETE request to /inspections/{id}/meter-readings/{meterReadingId}.
+     */
+    public function destroyMeter(string $inspectionId, string $meterId): RedirectResponse
+    {
+        ApiActivityTracker::track('DELETE', "/inspections/{$inspectionId}/meter-readings/{$meterId}", fn () => Inventorai::meterReadings()->delete($inspectionId, $meterId)
+        );
+
+        return back()->with('success', 'Meter reading removed.');
+    }
+
+    /**
+     * Add a key or fob to an inspection.
+     *
+     * Uses Inventorai::keysFobs()->create() which sends a
+     * POST request to /inspections/{id}/keys-fobs.
+     */
+    public function storeKey(string $inspectionId, Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'item_type' => ['required', 'in:'.implode(',', self::KEY_TYPES)],
+            'description' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        ApiActivityTracker::track('POST', "/inspections/{$inspectionId}/keys-fobs", fn () => Inventorai::keysFobs()->create($inspectionId, $data)
+        );
+
+        return back()->with('success', 'Key added.');
+    }
+
+    /**
+     * Update a key or fob.
+     *
+     * Uses Inventorai::keysFobs()->update() which sends a
+     * PATCH request to /inspections/{id}/keys-fobs/{keyFobId}.
+     */
+    public function updateKey(string $inspectionId, string $keyId, Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'item_type' => ['required', 'in:'.implode(',', self::KEY_TYPES)],
+            'description' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/keys-fobs/{$keyId}", fn () => Inventorai::keysFobs()->update($inspectionId, $keyId, $data)
+        );
+
+        return back()->with('success', 'Key updated.');
+    }
+
+    /**
+     * Delete a key or fob.
+     *
+     * Uses Inventorai::keysFobs()->delete() which sends a
+     * DELETE request to /inspections/{id}/keys-fobs/{keyFobId}.
+     */
+    public function destroyKey(string $inspectionId, string $keyId): RedirectResponse
+    {
+        ApiActivityTracker::track('DELETE', "/inspections/{$inspectionId}/keys-fobs/{$keyId}", fn () => Inventorai::keysFobs()->delete($inspectionId, $keyId)
+        );
+
+        return back()->with('success', 'Key removed.');
+    }
+
+    /**
+     * Answer a single compliance question.
+     *
+     * Uses Inventorai::compliance()->updateResponse() which sends a
+     * PATCH request to /inspections/{id}/compliance/fields/{fieldId}.
+     *
+     * The API types the stored value from the field's own field_type, so
+     * `value` is deliberately untyped here — a yes_no field wants a boolean,
+     * a date field an ISO date string, a number field a number.
+     *
+     * The token needs the 'compliance:write' ability for this to work.
+     */
+    public function updateCompliance(string $inspectionId, string $fieldId, Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'value' => ['present'],
+            'section_instance' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        ApiActivityTracker::track('PATCH', "/inspections/{$inspectionId}/compliance/fields/{$fieldId}", fn () => Inventorai::compliance()->updateResponse($inspectionId, $fieldId, $data)
+        );
+
+        return back()->with('success', 'Compliance answer saved.');
+    }
+
+    /**
+     * Record an alarm / safety equipment check.
+     *
+     * Uses Inventorai::assetChecks()->update() which sends a
+     * PUT request to /inspections/{id}/asset-checks/{assetCheckId}.
+     */
+    public function updateAssetCheck(string $inspectionId, string $checkId, Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'tested' => ['nullable', 'in:yes,no,not_accessible'],
+            'test_result' => ['nullable', 'in:pass,fail,na'],
+            'condition' => ['nullable', 'in:good,fair,poor,replace'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        ApiActivityTracker::track('PUT', "/inspections/{$inspectionId}/asset-checks/{$checkId}", fn () => Inventorai::assetChecks()->update($inspectionId, $checkId, $data)
+        );
+
+        return back()->with('success', 'Check saved.');
     }
 
     /**
