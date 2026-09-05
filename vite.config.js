@@ -5,10 +5,10 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     server: {
-        host: "inventoraisdkdemoapp.test",
+        host: "inventoraisdkdemovue.test",
         port: 5173,
         hmr: {
-            host: "inventoraisdkdemoapp.test",
+            host: "inventoraisdkdemovue.test",
         },
         watch: {
             usePolling: true,
