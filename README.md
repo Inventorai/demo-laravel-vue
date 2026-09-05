@@ -114,6 +114,25 @@ resources/js/Pages/
 | `composer test` | Run tests |
 | `npm run build` | Build frontend for production |
 
+## Keeping the backend in step with the React demo
+
+The same app exists as a Laravel + React build. Both share one Laravel backend —
+everything outside `resources/js/`, `resources/views/app.blade.php` and the
+frontend build config is identical — and this repo is where backend changes are
+authored.
+
+```bash
+./bin/sync-backend.sh              # push backend changes into the React demo
+./bin/sync-backend.sh --check      # report drift without changing anything
+```
+
+Enable the guard once per clone, so a push that would leave the two out of step
+is refused:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## License
 
 MIT
