@@ -1,6 +1,6 @@
 # Inventorai Demo — Laravel + Vue
 
-A working demo app showing how to integrate the [Inventorai PHP SDK](https://github.com/Inventorai/inventorai-php) and [Laravel wrapper](https://github.com/Inventorai/inventorai-laravel) into a Laravel + Vue (Inertia) application.
+A working demo app showing how to integrate the [Inventorai Laravel SDK](https://github.com/Inventorai/sdk-laravel) into a Laravel + Vue (Inertia) application.
 
 ## What it demonstrates
 
@@ -104,7 +104,7 @@ resources/js/Pages/
 - [Laravel 13](https://laravel.com) + [Inertia.js](https://inertiajs.com)
 - [Vue 3](https://vuejs.org) + TypeScript
 - [Tailwind CSS 4](https://tailwindcss.com) + [shadcn-vue](https://www.shadcn-vue.com)
-- [Inventorai PHP SDK](https://github.com/Inventorai/inventorai-php) + [Laravel wrapper](https://github.com/Inventorai/inventorai-laravel)
+- [Inventorai Laravel SDK](https://github.com/Inventorai/sdk-laravel), built on the [Inventorai PHP SDK](https://github.com/Inventorai/sdk-php)
 
 ## Useful commands
 
