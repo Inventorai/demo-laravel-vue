@@ -14,8 +14,8 @@ const UnsavedSources: InjectionKey<Set<DirtySource>> = Symbol('inventorai:unsave
  * useUnsavedGuard(), and anything with pending edits registers a count with
  * useUnsavedSource().
  *
- * Two different exits need covering. A real page unload — tab close, reload,
- * a link out of the app — is only visible to `beforeunload`. An Inertia visit
+ * Two different exits need covering. A real page unload (tab close, reload,
+ * a link out of the app) is only visible to `beforeunload`. An Inertia visit
  * never unloads the page at all, so it needs the router's own `before` event.
  */
 /**

@@ -1,16 +1,16 @@
-# Inventorai Demo — Laravel + Vue
+# Inventorai Demo: Laravel + Vue
 
 A working demo app showing how to integrate the [Inventorai Laravel SDK](https://github.com/Inventorai/sdk-laravel) into a Laravel + Vue (Inertia) application.
 
 ## What it demonstrates
 
-- **Properties** — List and view properties with addresses, images, and map pins
-- **Inspections** — Browse, filter, and edit inspections including areas, items, conditions, and cleanliness ratings
-- **Photo uploads** — Upload photos to inspection areas and items via the SDK
-- **Phrase autocomplete** — Search and select from pre-built phrase libraries when writing descriptions
-- **Real-time updates** — Listen for changes via WebSockets (Reverb) so the UI stays in sync
-- **API activity tracker** — See every SDK request in real time (method, endpoint, status, duration)
-- **Dashboard** — Property and inspection stats with charts
+- **Properties**: List and view properties with addresses, images, and map pins
+- **Inspections**: Browse, filter, and edit inspections including areas, items, conditions, and cleanliness ratings
+- **Photo uploads**: Upload photos to inspection areas and items via the SDK
+- **Phrase autocomplete**: Search and select from pre-built phrase libraries when writing descriptions
+- **Real-time updates**: Listen for changes via WebSockets (Reverb) so the UI stays in sync
+- **API activity tracker**: See every SDK request in real time (method, endpoint, status, duration)
+- **Dashboard**: Property and inspection stats with charts
 
 ## Requirements
 
@@ -52,7 +52,7 @@ You can generate a token from **Team Settings > API** in your [Inventorai dashbo
 
 ### 4. Set up the database
 
-The app uses SQLite by default — no database server needed.
+The app uses SQLite by default, so no database server needed.
 
 ```bash
 touch database/database.sqlite
@@ -116,9 +116,9 @@ resources/js/Pages/
 
 ## Keeping the backend in step with the React demo
 
-The same app exists as a Laravel + React build. Both share one Laravel backend —
+The same app exists as a Laravel + React build. Both share one Laravel backend:
 everything outside `resources/js/`, `resources/views/app.blade.php` and the
-frontend build config is identical — and this repo is where backend changes are
+frontend build config is identical, and this repo is where backend changes are
 authored.
 
 ```bash

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Alarms & safety equipment — Inventorai::assetChecks().
+ * Alarms & safety equipment: Inventorai::assetChecks().
  *
  * Checks hang off the property's assets rather than off an inspection area,
  * so the API groups them by asset type (smoke alarm, CO alarm, and so on) and
@@ -101,7 +101,7 @@ const spec = (check: Record<string, any>) => [check.make, check.model, check.ser
                             <InputGroup>
                                 <InputGroupAddon class="w-24 shrink-0">Tested</InputGroupAddon>
                                 <Select v-model="drafts[check.id].tested">
-                                    <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="—" /></SelectTrigger>
+                                    <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="Not set" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="o in testedOptions" :key="o" :value="o" class="capitalize">{{ humanize(o) }}</SelectItem>
                                     </SelectContent>
@@ -110,7 +110,7 @@ const spec = (check: Record<string, any>) => [check.make, check.model, check.ser
                             <InputGroup>
                                 <InputGroupAddon class="w-24 shrink-0">Result</InputGroupAddon>
                                 <Select v-model="drafts[check.id].test_result">
-                                    <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="—" /></SelectTrigger>
+                                    <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="Not set" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="o in resultOptions" :key="o" :value="o" class="uppercase">{{ o }}</SelectItem>
                                     </SelectContent>
@@ -119,7 +119,7 @@ const spec = (check: Record<string, any>) => [check.make, check.model, check.ser
                             <InputGroup>
                                 <InputGroupAddon class="w-24 shrink-0">Condition</InputGroupAddon>
                                 <Select v-model="drafts[check.id].condition">
-                                    <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="—" /></SelectTrigger>
+                                    <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="Not set" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="o in conditionOptions" :key="o" :value="o" class="capitalize">{{ o }}</SelectItem>
                                     </SelectContent>

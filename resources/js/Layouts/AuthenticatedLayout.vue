@@ -192,7 +192,7 @@ const year = new Date().getFullYear();
                             </h3>
                             <p class="mt-2 text-sm text-muted-foreground">
                                 This dashboard is a demo built on the Inventorai API. We design and build bespoke
-                                property &amp; inspection platforms around your workflow — white-label apps, custom
+                                property &amp; inspection platforms around your workflow: white-label apps, custom
                                 reporting, and deep integrations.
                             </p>
                         </div>

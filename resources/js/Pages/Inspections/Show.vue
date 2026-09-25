@@ -3,7 +3,7 @@
  * Inspection editor.
  *
  * Everything on this page arrives in the single GET /inspections/{id} call
- * made by InspectionController@show — areas, items, meters, keys, compliance
+ * made by InspectionController@show: areas, items, meters, keys, compliance
  * and asset checks all come from that one payload's `include`. Writes are the
  * opposite: each record type goes back through its own SDK resource, one
  * record at a time.
@@ -137,7 +137,7 @@ const saveItem = (itemId: string) => {
 };
 
 // Nothing saves as you type, and a closed panel hides whatever is pending
-// inside it — so every level reports what it is holding. Inertia clears
+// inside it, so every level reports what it is holding. Inertia clears
 // `isDirty` itself once a form's own save succeeds.
 const dirtyAreaIds = computed(() => new Set(
     Object.entries(areaForms).filter(([, form]) => form.isDirty).map(([id]) => id),
@@ -201,7 +201,7 @@ const areaPhotoCount = (area: any) =>
 </script>
 
 <template>
-    <Head :title="`Edit — ${humanize(inspection.type ?? 'Inspection')}`" />
+    <Head :title="`Edit: ${humanize(inspection.type ?? 'Inspection')}`" />
 
     <!-- Photo lightbox -->
     <Dialog v-model:open="lightboxOpen">
@@ -237,7 +237,7 @@ const areaPhotoCount = (area: any) =>
                     <h2 class="text-xl leading-tight font-semibold text-foreground capitalize">{{ humanize(inspection.type ?? 'Inspection') }}</h2>
                     <p v-if="inspection.property?.address" class="text-sm text-muted-foreground">{{ inspection.property.address.full_address }}</p>
                 </div>
-                <Badge :variant="inspection.status === 'completed' ? 'default' : 'secondary'" class="text-sm capitalize">{{ humanize(inspection.status ?? '—') }}</Badge>
+                <Badge :variant="inspection.status === 'completed' ? 'default' : 'secondary'" class="text-sm capitalize">{{ humanize(inspection.status ?? 'Not set') }}</Badge>
             </div>
         </template>
 
@@ -255,10 +255,10 @@ const areaPhotoCount = (area: any) =>
                             />
                             <div v-else class="flex h-32 w-48 shrink-0 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">No image</div>
                             <div class="grid flex-1 grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-4">
-                                <div><p class="text-muted-foreground">Date</p><p class="font-medium">{{ inspection.scheduled_at ?? '—' }}</p></div>
-                                <div><p class="text-muted-foreground">Inspector</p><p class="font-medium">{{ inspection.inspector?.name ?? '—' }}</p></div>
-                                <div><p class="text-muted-foreground">Type</p><p class="font-medium capitalize">{{ humanize(inspection.type ?? '—') }}</p></div>
-                                <div><p class="text-muted-foreground">Depth</p><p class="font-medium capitalize">{{ humanize(inspection.inspection_depth ?? '—') }}</p></div>
+                                <div><p class="text-muted-foreground">Date</p><p class="font-medium">{{ inspection.scheduled_at ?? 'Not set' }}</p></div>
+                                <div><p class="text-muted-foreground">Inspector</p><p class="font-medium">{{ inspection.inspector?.name ?? 'Not set' }}</p></div>
+                                <div><p class="text-muted-foreground">Type</p><p class="font-medium capitalize">{{ humanize(inspection.type ?? 'Not set') }}</p></div>
+                                <div><p class="text-muted-foreground">Depth</p><p class="font-medium capitalize">{{ humanize(inspection.inspection_depth ?? 'Not set') }}</p></div>
                                 <div>
                                     <p class="text-muted-foreground">Defects</p>
                                     <p class="font-medium">
@@ -270,7 +270,7 @@ const areaPhotoCount = (area: any) =>
                                 <div><p class="text-muted-foreground">Areas</p><p class="font-medium">{{ areas.length }}</p></div>
                                 <div>
                                     <p class="text-muted-foreground">Property</p>
-                                    <p class="flex items-center gap-1 font-medium"><MapPin class="h-3 w-3 shrink-0" />{{ inspection.property?.address?.line_1 ?? '—' }}</p>
+                                    <p class="flex items-center gap-1 font-medium"><MapPin class="h-3 w-3 shrink-0" />{{ inspection.property?.address?.line_1 ?? 'Not set' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -377,14 +377,14 @@ const areaPhotoCount = (area: any) =>
                                                         <InputGroup>
                                                             <InputGroupAddon class="w-28 shrink-0">Condition</InputGroupAddon>
                                                             <Select v-model="itemForms[item.id].condition">
-                                                                <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="—" /></SelectTrigger>
+                                                                <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="Not set" /></SelectTrigger>
                                                                 <SelectContent><SelectItem v-for="c in conditionOptions" :key="c" :value="c" class="capitalize">{{ c }}</SelectItem></SelectContent>
                                                             </Select>
                                                         </InputGroup>
                                                         <InputGroup>
                                                             <InputGroupAddon class="w-28 shrink-0">Cleanliness</InputGroupAddon>
                                                             <Select v-model="itemForms[item.id].cleanliness">
-                                                                <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="—" /></SelectTrigger>
+                                                                <SelectTrigger class="w-full rounded-none border-0 shadow-none focus:ring-0"><SelectValue placeholder="Not set" /></SelectTrigger>
                                                                 <SelectContent><SelectItem v-for="c in cleanlinessOptions" :key="c" :value="c" class="capitalize">{{ c }}</SelectItem></SelectContent>
                                                             </Select>
                                                         </InputGroup>

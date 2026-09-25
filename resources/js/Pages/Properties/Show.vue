@@ -108,7 +108,7 @@ onUnmounted(() => {
                             <template v-for="(value, key) in property.landlord" :key="key">
                                 <template v-if="typeof value !== 'object' || value === null">
                                     <div class="text-sm text-muted-foreground capitalize">{{ humanize(String(key)) }}</div>
-                                    <div class="text-sm">{{ value ?? '—' }}</div>
+                                    <div class="text-sm">{{ value ?? 'Not set' }}</div>
                                 </template>
                             </template>
                         </div>
@@ -130,11 +130,11 @@ onUnmounted(() => {
                                 <div>
                                     <p class="text-sm font-medium capitalize">{{ humanize(inspection.type ?? `Inspection #${inspection.id}`) }}</p>
                                     <p class="text-xs text-muted-foreground">
-                                        {{ inspection.scheduled_at ?? inspection.created_at ?? '—' }}
+                                        {{ inspection.scheduled_at ?? inspection.created_at ?? 'Not set' }}
                                     </p>
                                 </div>
                                 <Badge variant="secondary" class="capitalize">
-                                    {{ humanize(inspection.status ?? '—') }}
+                                    {{ humanize(inspection.status ?? 'Not set') }}
                                 </Badge>
                             </div>
                         </div>

@@ -227,14 +227,14 @@ const goToPage = (page: number) => {
                                             <div v-else class="h-8 w-8 rounded bg-muted" />
                                         </TableCell>
                                         <TableCell>
-                                            <div class="font-medium">{{ inspection.property?.address?.line_1 ?? '—' }}</div>
+                                            <div class="font-medium">{{ inspection.property?.address?.line_1 ?? 'Not set' }}</div>
                                             <div class="text-xs text-muted-foreground">
                                                 {{ [inspection.property?.address?.city, inspection.property?.address?.postcode].filter(Boolean).join(', ') }}
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" class="capitalize">
-                                                {{ humanize(inspection.type ?? '—') }}
+                                                {{ humanize(inspection.type ?? 'Not set') }}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -242,18 +242,18 @@ const goToPage = (page: number) => {
                                                 :variant="inspection.status === 'completed' ? 'default' : 'secondary'"
                                                 class="capitalize"
                                             >
-                                                {{ humanize(inspection.status ?? '—') }}
+                                                {{ humanize(inspection.status ?? 'Not set') }}
                                             </Badge>
                                         </TableCell>
                                         <TableCell class="whitespace-nowrap">
-                                            {{ inspection.scheduled_at ?? '—' }}
+                                            {{ inspection.scheduled_at ?? 'Not set' }}
                                         </TableCell>
                                         <TableCell>
-                                            {{ inspection.inspector?.name ?? '—' }}
+                                            {{ inspection.inspector?.name ?? 'Not set' }}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" class="capitalize">
-                                                {{ humanize(inspection.inspection_depth ?? '—') }}
+                                                {{ humanize(inspection.inspection_depth ?? 'Not set') }}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -263,7 +263,7 @@ const goToPage = (page: number) => {
                                                     ({{ inspection.statistics.critical_defects }} critical)
                                                 </span>
                                             </span>
-                                            <span v-else>—</span>
+                                            <span v-else>None</span>
                                         </TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" as-child>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Compliance — Inventorai::compliance().
+ * Compliance: Inventorai::compliance().
  *
  * When a form is attached to an inspection the API snapshots the team's
  * template, so what arrives here is that inspection's own copy: forms →
@@ -55,7 +55,7 @@ const choicesFor = (type: string): { label: string; value: boolean | null }[] | 
 
 const inputTypeFor = (type: string) => (type === 'date' ? 'date' : type === 'number' ? 'number' : 'text');
 
-/** Fields the API fills from an upload or an external link — read-only here. */
+/** Fields the API fills from an upload or an external link, read-only here. */
 const isReadOnly = (type: string) => type === 'file' || type === 'link';
 
 // One draft per field, rebuilt from the payload after every save.
@@ -88,7 +88,7 @@ const saveDraft = (item: Record<string, any>) => {
 
 const isDirty = (item: Record<string, any>) => String(drafts.value[item.id] ?? '') !== String(item.value ?? '');
 
-// Yes/no answers save on click, so only the typed field types can go stale —
+// Yes/no answers save on click, so only the typed field types can go stale,
 // and a closed form hides them, hence the count on the trigger.
 const dirtyCount = (form: Record<string, any>) => (form.items ?? []).filter((item: Record<string, any>) => isDirty(item)).length;
 

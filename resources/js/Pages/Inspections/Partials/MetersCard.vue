@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Meter readings — Inventorai::meterReadings().
+ * Meter readings: Inventorai::meterReadings().
  *
  * Readings arrive on the inspection payload via the `meterReadings` include;
  * writes go one at a time through the app's own routes, which wrap
