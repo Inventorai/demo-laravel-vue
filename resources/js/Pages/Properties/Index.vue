@@ -29,12 +29,14 @@ const props = defineProps<{
 
 const search = ref(props.filters?.search ?? '');
 const propertyType = ref(props.filters?.property_type ?? '');
+const isHmo = ref(props.filters?.is_hmo ?? '');
 const loading = ref(false);
 
 const applyFilters = useDebounceFn(() => {
     const params: Record<string, any> = {};
     if (search.value) params.search = search.value;
     if (propertyType.value) params.property_type = propertyType.value;
+    if (isHmo.value) params.is_hmo = isHmo.value;
 
     router.get(route('properties.index'), params, {
         preserveState: true,
@@ -46,10 +48,12 @@ const applyFilters = useDebounceFn(() => {
 
 watch(search, applyFilters);
 watch(propertyType, applyFilters);
+watch(isHmo, applyFilters);
 
 const clearFilters = () => {
     search.value = '';
     propertyType.value = '';
+    isHmo.value = '';
     router.get(route('properties.index'), {}, {
         preserveState: true,
         onStart: () => (loading.value = true),
@@ -61,6 +65,7 @@ const goToPage = (page: number) => {
     const params: Record<string, any> = { page };
     if (search.value) params.search = search.value;
     if (propertyType.value) params.property_type = propertyType.value;
+    if (isHmo.value) params.is_hmo = isHmo.value;
 
     router.get(route('properties.index'), params, {
         preserveState: true,
@@ -132,18 +137,24 @@ onUnmounted(() => {
                                         <SelectValue placeholder="Property type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="house">House</SelectItem>
                                         <SelectItem value="flat">Flat</SelectItem>
-                                        <SelectItem value="bungalow">Bungalow</SelectItem>
-                                        <SelectItem value="maisonette">Maisonette</SelectItem>
-                                        <SelectItem value="studio">Studio</SelectItem>
-                                        <SelectItem value="room">Room</SelectItem>
+                                        <SelectItem value="house">House</SelectItem>
                                         <SelectItem value="commercial">Commercial</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
+                                        <SelectItem value="studio">Studio</SelectItem>
+                                        <SelectItem value="land">Land</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select v-model="isHmo">
+                                    <SelectTrigger class="w-[120px]">
+                                        <SelectValue placeholder="HMO" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">HMO</SelectItem>
+                                        <SelectItem value="0">Not HMO</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button
-                                    v-if="search || propertyType"
+                                    v-if="search || propertyType || isHmo"
                                     variant="ghost"
                                     size="icon"
                                     @click="clearFilters"
@@ -158,7 +169,7 @@ onUnmounted(() => {
                             <Home class="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 class="mt-4 text-lg font-medium text-foreground">No properties found</h3>
                             <p class="mt-2 text-sm text-muted-foreground">
-                                {{ search || propertyType ? 'Try adjusting your filters.' : 'Properties from your Inventorai account will appear here.' }}
+                                {{ search || propertyType || isHmo ? 'Try adjusting your filters.' : 'Properties from your Inventorai account will appear here.' }}
                             </p>
                         </div>
 
@@ -222,6 +233,7 @@ onUnmounted(() => {
                                             <Badge variant="secondary" class="capitalize">
                                                 {{ property.property_type ?? '—' }}
                                             </Badge>
+                                            <Badge v-if="property.is_hmo" variant="outline" class="ml-1">HMO</Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Badge :variant="property.is_residential ? 'default' : 'outline'">

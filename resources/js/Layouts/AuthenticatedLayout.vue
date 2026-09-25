@@ -50,7 +50,7 @@ const year = new Date().getFullYear();
             <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-8">
                     <Link :href="route('dashboard')">
-                        <ApplicationLogo class="h-12 rounded-md" />
+                        <ApplicationLogo class="h-12" />
                     </Link>
 
                     <div class="hidden items-center gap-1 sm:flex">

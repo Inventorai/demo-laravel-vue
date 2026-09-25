@@ -85,6 +85,7 @@ onUnmounted(() => {
                                 </div>
                                 <div class="flex flex-wrap gap-2">
                                     <Badge variant="secondary" class="capitalize">{{ property.property_type }}</Badge>
+                                    <Badge v-if="property.is_hmo" variant="outline">HMO</Badge>
                                     <Badge :variant="property.is_residential ? 'default' : 'outline'">
                                         {{ property.is_residential ? 'Residential' : 'Commercial' }}
                                     </Badge>
