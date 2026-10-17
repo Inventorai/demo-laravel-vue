@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,11 +18,14 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { X, ClipboardCheck, ChevronLeft, ChevronRight, Eye } from '@lucide/vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEcho } from '@/composables/useEcho';
+import { useOnlineUsers } from '@/composables/useOnlineUsers';
+import InspectorAvatar from '@/components/InspectorAvatar.vue';
 
 const humanize = (value: string) => value.replace(/_/g, ' ');
 
 const props = defineProps<{
     inspections: Record<string, any>[];
+    grouped?: Record<string, any>[] | null;
     meta?: Record<string, any>;
     filters?: Record<string, any>;
     error?: string;
@@ -33,11 +36,12 @@ const props = defineProps<{
 // channel, so the list refreshes itself instead of waiting for a reload.
 // Auth is proxied through /broadcasting/auth to keep the API token server-side.
 const echo = useEcho();
+const online = useOnlineUsers(() => props.teamId);
 
 onMounted(() => {
     if (!echo || !props.teamId) return;
 
-    const refresh = () => router.reload({ only: ['inspections', 'meta'] });
+    const refresh = () => router.reload({ only: ['inspections', 'grouped', 'meta'] });
 
     echo.private(`team.${props.teamId}`)
         .listen('.inspection.created', refresh)
@@ -55,12 +59,14 @@ onUnmounted(() => {
 
 const status = ref(props.filters?.status ?? '');
 const type = ref(props.filters?.type ?? '');
+const groupBy = ref(props.filters?.group_by ?? 'none');
 const loading = ref(false);
 
 const applyFilters = () => {
     const params: Record<string, any> = {};
     if (status.value) params.status = status.value;
     if (type.value) params.type = type.value;
+    if (groupBy.value !== 'none') params.group_by = groupBy.value;
 
     router.get(route('inspections.index'), params, {
         preserveState: true,
@@ -72,10 +78,28 @@ const applyFilters = () => {
 
 watch(status, applyFilters);
 watch(type, applyFilters);
+watch(groupBy, applyFilters);
+
+// One section per group when grouped, or a single unlabelled section for the
+// flat list, so the table renders its rows the same way either way.
+const sections = computed(() => props.grouped
+    ? props.grouped.map((group) => ({
+        name: group.group_name || (props.filters?.group_by === 'inspector' ? 'Unassigned' : 'No branch'),
+        count: group.count,
+        continued: group.continued,
+        rows: group.inspections ?? [],
+        // Grouped by inspector, the header carries that inspector's avatar.
+        // The group has no id of its own, so presence goes by its first row's.
+        inspector: props.filters?.group_by === 'inspector' && group.inspections?.[0]?.inspector?.id
+            ? { id: group.inspections[0].inspector.id, avatar: group.avatar, initials: group.initials }
+            : null,
+    }))
+    : [{ name: null, count: 0, continued: false, rows: props.inspections, inspector: null }]);
 
 const clearFilters = () => {
     status.value = '';
     type.value = '';
+    groupBy.value = 'none';
     router.get(route('inspections.index'), {}, {
         preserveState: true,
         onStart: () => (loading.value = true),
@@ -87,6 +111,7 @@ const goToPage = (page: number) => {
     const params: Record<string, any> = { page };
     if (status.value) params.status = status.value;
     if (type.value) params.type = type.value;
+    if (groupBy.value !== 'none') params.group_by = groupBy.value;
 
     router.get(route('inspections.index'), params, {
         preserveState: true,
@@ -149,8 +174,18 @@ const goToPage = (page: number) => {
                                         <SelectItem value="completed">Completed</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <Select v-model="groupBy">
+                                    <SelectTrigger class="w-[150px]">
+                                        <SelectValue placeholder="Group by" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No grouping</SelectItem>
+                                        <SelectItem value="branch">Branch</SelectItem>
+                                        <SelectItem value="inspector">Inspector</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <Button
-                                    v-if="type || status"
+                                    v-if="type || status || groupBy !== 'none'"
                                     variant="ghost"
                                     size="icon"
                                     @click="clearFilters"
@@ -216,63 +251,91 @@ const goToPage = (page: number) => {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="inspection in inspections" :key="inspection.id">
-                                        <TableCell>
-                                            <img
-                                                v-if="inspection.property?.image"
-                                                :src="inspection.property.image"
-                                                :alt="inspection.property?.address?.line_1 ?? ''"
-                                                class="h-8 w-8 rounded object-cover"
-                                            />
-                                            <div v-else class="h-8 w-8 rounded bg-muted" />
-                                        </TableCell>
-                                        <TableCell>
-                                            <div class="font-medium">{{ inspection.property?.address?.line_1 ?? 'Not set' }}</div>
-                                            <div class="text-xs text-muted-foreground">
-                                                {{ [inspection.property?.address?.city, inspection.property?.address?.postcode].filter(Boolean).join(', ') }}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" class="capitalize">
-                                                {{ humanize(inspection.type ?? 'Not set') }}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                :variant="inspection.status === 'completed' ? 'default' : 'secondary'"
-                                                class="capitalize"
-                                            >
-                                                {{ humanize(inspection.status ?? 'Not set') }}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell class="whitespace-nowrap">
-                                            {{ inspection.scheduled_at ?? 'Not set' }}
-                                        </TableCell>
-                                        <TableCell>
-                                            {{ inspection.inspector?.name ?? 'Not set' }}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" class="capitalize">
-                                                {{ humanize(inspection.inspection_depth ?? 'Not set') }}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span v-if="inspection.statistics">
-                                                {{ inspection.statistics.total_defects }}
-                                                <span v-if="inspection.statistics.critical_defects" class="text-red-500 text-xs">
-                                                    ({{ inspection.statistics.critical_defects }} critical)
+                                    <template v-for="section in sections" :key="section.name ?? 'all'">
+                                        <TableRow v-if="section.name" class="bg-muted/50 hover:bg-muted/50">
+                                            <TableCell colspan="9" class="font-medium">
+                                                <div class="flex items-center gap-2">
+                                                    <InspectorAvatar
+                                                        v-if="section.inspector"
+                                                        :name="section.name"
+                                                        :avatar="section.inspector.avatar"
+                                                        :initials="section.inspector.initials"
+                                                        :online="online.has(String(section.inspector.id))"
+                                                    />
+                                                    <span>
+                                                        {{ section.name }} ({{ section.count }})
+                                                        <span v-if="section.continued" class="font-normal text-muted-foreground">(continued)</span>
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow v-for="inspection in section.rows" :key="inspection.id">
+                                            <TableCell>
+                                                <img
+                                                    v-if="inspection.property?.image"
+                                                    :src="inspection.property.image"
+                                                    :alt="inspection.property?.address?.line_1 ?? ''"
+                                                    class="h-8 w-8 rounded object-cover"
+                                                />
+                                                <div v-else class="h-8 w-8 rounded bg-muted" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div class="font-medium">{{ inspection.property?.address?.line_1 ?? 'Not set' }}</div>
+                                                <div class="text-xs text-muted-foreground">
+                                                    {{ [inspection.property?.address?.city, inspection.property?.address?.postcode].filter(Boolean).join(', ') }}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" class="capitalize">
+                                                    {{ humanize(inspection.type ?? 'Not set') }}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    :variant="inspection.status === 'completed' ? 'default' : 'secondary'"
+                                                    class="capitalize"
+                                                >
+                                                    {{ humanize(inspection.status ?? 'Not set') }}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell class="whitespace-nowrap">
+                                                {{ inspection.scheduled_at ?? 'Not set' }}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div v-if="inspection.inspector" class="flex items-center gap-2">
+                                                    <InspectorAvatar
+                                                        :name="inspection.inspector.name"
+                                                        :avatar="inspection.inspector.avatar"
+                                                        :initials="inspection.inspector.initials"
+                                                        :online="online.has(String(inspection.inspector.id))"
+                                                    />
+                                                    <span>{{ inspection.inspector.name ?? 'Not set' }}</span>
+                                                </div>
+                                                <span v-else>Not set</span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" class="capitalize">
+                                                    {{ humanize(inspection.inspection_depth ?? 'Not set') }}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span v-if="inspection.statistics">
+                                                    {{ inspection.statistics.total_defects }}
+                                                    <span v-if="inspection.statistics.critical_defects" class="text-red-500 text-xs">
+                                                        ({{ inspection.statistics.critical_defects }} critical)
+                                                    </span>
                                                 </span>
-                                            </span>
-                                            <span v-else>None</span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" as-child>
-                                                <Link :href="route('inspections.show', inspection.id)">
-                                                    <Eye class="h-4 w-4" />
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
+                                                <span v-else>None</span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="icon" as-child>
+                                                    <Link :href="route('inspections.show', inspection.id)">
+                                                        <Eye class="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    </template>
                                 </TableBody>
                             </Table>
 

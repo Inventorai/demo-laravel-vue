@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const props = defineProps<{
     properties: Record<string, any>[];
+    grouped?: Record<string, any>[] | null;
     meta?: Record<string, any>;
     filters?: Record<string, any>;
     teamId?: string | null;
@@ -30,6 +31,7 @@ const props = defineProps<{
 const search = ref(props.filters?.search ?? '');
 const propertyType = ref(props.filters?.property_type ?? '');
 const isHmo = ref(props.filters?.is_hmo ?? '');
+const groupBy = ref(props.filters?.group_by ?? 'none');
 const loading = ref(false);
 
 const applyFilters = useDebounceFn(() => {
@@ -37,6 +39,7 @@ const applyFilters = useDebounceFn(() => {
     if (search.value) params.search = search.value;
     if (propertyType.value) params.property_type = propertyType.value;
     if (isHmo.value) params.is_hmo = isHmo.value;
+    if (groupBy.value !== 'none') params.group_by = groupBy.value;
 
     router.get(route('properties.index'), params, {
         preserveState: true,
@@ -49,11 +52,24 @@ const applyFilters = useDebounceFn(() => {
 watch(search, applyFilters);
 watch(propertyType, applyFilters);
 watch(isHmo, applyFilters);
+watch(groupBy, applyFilters);
+
+// One section per group when grouped, or a single unlabelled section for the
+// flat list, so the table renders its rows the same way either way.
+const sections = computed(() => props.grouped
+    ? props.grouped.map((group) => ({
+        name: group.group_name || 'No branch',
+        count: group.count,
+        continued: group.continued,
+        rows: group.properties ?? [],
+    }))
+    : [{ name: null, count: 0, continued: false, rows: props.properties }]);
 
 const clearFilters = () => {
     search.value = '';
     propertyType.value = '';
     isHmo.value = '';
+    groupBy.value = 'none';
     router.get(route('properties.index'), {}, {
         preserveState: true,
         onStart: () => (loading.value = true),
@@ -66,6 +82,7 @@ const goToPage = (page: number) => {
     if (search.value) params.search = search.value;
     if (propertyType.value) params.property_type = propertyType.value;
     if (isHmo.value) params.is_hmo = isHmo.value;
+    if (groupBy.value !== 'none') params.group_by = groupBy.value;
 
     router.get(route('properties.index'), params, {
         preserveState: true,
@@ -84,7 +101,7 @@ const echo = useEcho();
 onMounted(() => {
     if (!echo || !props.teamId) return;
 
-    const refresh = () => router.reload({ only: ['properties', 'meta'] });
+    const refresh = () => router.reload({ only: ['properties', 'grouped', 'meta'] });
 
     echo.private(`team.${props.teamId}`)
         .listen('.property.created', refresh)
@@ -153,8 +170,17 @@ onUnmounted(() => {
                                         <SelectItem value="0">Not HMO</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <Select v-model="groupBy">
+                                    <SelectTrigger class="w-[150px]">
+                                        <SelectValue placeholder="Group by" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No grouping</SelectItem>
+                                        <SelectItem value="branch">Branch</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <Button
-                                    v-if="search || propertyType || isHmo"
+                                    v-if="search || propertyType || isHmo || groupBy !== 'none'"
                                     variant="ghost"
                                     size="icon"
                                     @click="clearFilters"
@@ -214,40 +240,48 @@ onUnmounted(() => {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="property in properties" :key="property.id">
-                                        <TableCell>
-                                            <img
-                                                v-if="property.image"
-                                                :src="property.image"
-                                                :alt="property.address?.line_1 ?? ''"
-                                                class="h-8 w-8 rounded object-cover"
-                                            />
-                                            <div v-else class="h-8 w-8 rounded bg-muted" />
-                                        </TableCell>
-                                        <TableCell class="font-medium">
-                                            {{ property.address?.line_1 ?? 'Not set' }}
-                                        </TableCell>
-                                        <TableCell>{{ property.address?.city ?? 'Not set' }}</TableCell>
-                                        <TableCell>{{ property.address?.postcode ?? 'Not set' }}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="secondary" class="capitalize">
-                                                {{ property.property_type ?? 'Not set' }}
-                                            </Badge>
-                                            <Badge v-if="property.is_hmo" variant="outline" class="ml-1">HMO</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge :variant="property.is_residential ? 'default' : 'outline'">
-                                                {{ property.is_residential ? 'Residential' : 'Commercial' }}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" as-child>
-                                                <Link :href="route('properties.show', property.id)">
-                                                    <Eye class="h-4 w-4" />
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
+                                    <template v-for="section in sections" :key="section.name ?? 'all'">
+                                        <TableRow v-if="section.name" class="bg-muted/50 hover:bg-muted/50">
+                                            <TableCell colspan="7" class="font-medium">
+                                                {{ section.name }} ({{ section.count }})
+                                                <span v-if="section.continued" class="font-normal text-muted-foreground">(continued)</span>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow v-for="property in section.rows" :key="property.id">
+                                            <TableCell>
+                                                <img
+                                                    v-if="property.image"
+                                                    :src="property.image"
+                                                    :alt="property.address?.line_1 ?? ''"
+                                                    class="h-8 w-8 rounded object-cover"
+                                                />
+                                                <div v-else class="h-8 w-8 rounded bg-muted" />
+                                            </TableCell>
+                                            <TableCell class="font-medium">
+                                                {{ property.address?.line_1 ?? 'Not set' }}
+                                            </TableCell>
+                                            <TableCell>{{ property.address?.city ?? 'Not set' }}</TableCell>
+                                            <TableCell>{{ property.address?.postcode ?? 'Not set' }}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="secondary" class="capitalize">
+                                                    {{ property.property_type ?? 'Not set' }}
+                                                </Badge>
+                                                <Badge v-if="property.is_hmo" variant="outline" class="ml-1">HMO</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge :variant="property.is_residential ? 'default' : 'outline'">
+                                                    {{ property.is_residential ? 'Residential' : 'Commercial' }}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="icon" as-child>
+                                                    <Link :href="route('properties.show', property.id)">
+                                                        <Eye class="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    </template>
                                 </TableBody>
                             </Table>
 
